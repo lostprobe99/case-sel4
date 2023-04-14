@@ -1,4 +1,4 @@
-set(project_name hello)
+set(project_name ipc)
 
 # BEGIN sel4 dependencies
 include(../../settings.cmake)
@@ -23,9 +23,12 @@ util_libs_import_libraries()
 sel4_libs_import_libraries()
 # END sel4 dependencies
 
+add_subdirectory(../libsel4tutorials libsel4tutorials)
+add_subdirectory(../os_case os_case)
+
 # BEGIN custom
-add_executable(${project_name} src/main.c)
-target_link_libraries(${project_name} sel4muslcsys muslc sel4runtime)
+add_executable(${project_name} main.c)
+target_link_libraries(${project_name} sel4muslcsys muslc sel4runtime sel4tutorials os_case)
 # END custom
 
 include(rootserver)
