@@ -12,20 +12,20 @@ int child_thread_state;
 
 void thread_2(uint64_t * stack_top)
 {
-    printf("stack_top = %#x\n", stack_top);
+    printf("stack_top = %#lx\n", stack_top);
     printf("thread_2 starting.\n");
     uint64_t n = 0xff;
-    printf("n = %#x\n", n);
+    printf("n = %#lx\n", n);
     uint64_t nums[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
     uint64_t * it = stack_top;
     for(int i = 0; i < 4; i++)
     {
-        printf("stack[%#x]: ", stack_top - i * 8);
+        printf("stack[%#lx]: ", stack_top - i * 8);
         for(int j = 0; j < 8; j++)
             printf("%-#16x ", *(stack_top - (8 * i + j)));
         printf("\n");
     }
-    printf("stack bottom[thread_2_stack] = %#x\n", thread_2_stack);
+    printf("stack bottom[thread_2_stack] = %#lx\n", thread_2_stack);
     seL4_DebugDumpScheduler();
     printf("\n\n\n");
     child_thread_state = 0;
@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
     ZF_LOGF_IF(thread_2_stack_top % (stack_alignment_requirement) != 0,
                "Stack top isn't aligned correctly to a %dB boundary.\n",
                stack_alignment_requirement);
-    printf("new thread stack top = %#x\n", thread_2_stack_top);
+    printf("new thread stack top = %#lx\n", thread_2_stack_top);
 
     // regs.rsp = (seL4_Word)thread_2_stack_top;	// 新线程的运行栈
     // sel4utils_set_stack_pointer(&regs, thread_2_stack_top);
@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
 
     while(child_thread_state == 1);
 
-    printf("子线程 [%#x] 已结束\n", child_tcb);
+    printf("子线程 [%#lx] 已结束\n", child_tcb);
     seL4_DebugDumpScheduler();
 
     printf("\n\n\n");

@@ -2,12 +2,12 @@
 
 typedef void (*thread_fn)(void *, void *, void *);
 
-/// @brief 创建一个 sel4 线程
-/// @param entry_point 线程的入口点
-/// @param arg0 线程第一个参数
-/// @param arg1 第二个参数
-/// @param arg2 第三个参数
-/// @param thread_stack 一个数组，作为线程的运行栈
-/// @param stack_size 数组的大小
-/// @return 线程的 tcb 的 cap
-seL4_CPtr sel4_create_thread(thread_fn entry_point, void * arg0, void * arg1, void * ipc_buf, void * thread_stack, unsigned long stack_size);
+/// @brief 创建一个 seL4_UserContext
+/// @param entry_point 子线程的入口点
+/// @param arg0 子线程参数 1
+/// @param arg1 子线程参数 2
+/// @param arg2 子线程参数 3
+/// @param thread_stack 作为子线程运行栈的数组首地址 
+/// @param stack_size 栈数组大小，用于计算栈顶地址
+/// @return 
+seL4_UserContext sel4_make_regs(thread_fn entry_point, void * arg0, void * arg1, void * arg2, void * thread_stack, unsigned long stack_size);
