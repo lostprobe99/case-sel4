@@ -17,7 +17,7 @@ seL4_UserContext sel4_make_regs(thread_fn entry_point, void * arg0, void * arg1,
                stack_alignment_requirement);
 
     sel4utils_arch_init_local_context(entry_point,	// 线程入口点
-					arg0, arg1, arg2,   //  三个参数
-					thread_stack_top, &regs); // 栈顶指针和寄存器
+					(void*)arg0, (void*)arg1, (void*)arg2,   //  三个参数
+					(void*)thread_stack_top, &regs); // 栈顶指针和寄存器
     return regs;
 }

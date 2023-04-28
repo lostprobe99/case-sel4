@@ -10,14 +10,15 @@
 static uint64_t thread_2_stack[THREAD_2_STACK_SIZE];
 int child_thread_state;
 
-void thread_2(uint64_t * stack_top)
+void thread_2(uint64_t * stack_top, void *arg1, void * arg2)
 {
     printf("stack_top = %#lx\n", stack_top);
+    printf("arg1 = %#lx\n", (uint64_t*)arg1);
+    printf("arg2 = %#lx\n", (uint64_t*)arg2);
     printf("thread_2 starting.\n");
     uint64_t n = 0xff;
     printf("n = %#lx\n", n);
     uint64_t nums[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-    uint64_t * it = stack_top;
     for(int i = 0; i < 4; i++)
     {
         printf("stack[%#lx]: ", stack_top - i * 8);
@@ -83,8 +84,8 @@ int main(int argc, char *argv[]) {
 
     // Step 7.设置新线程的入口点，运行栈，参数
     sel4utils_arch_init_local_context(thread_2,	// 线程入口点
-					thread_2_stack_top, 2, 3,   //  三个参数
-					thread_2_stack_top, &regs); // 栈顶指针和寄存器
+					(void*)thread_2_stack_top, (void*)2, (void*)3,   //  三个参数
+					(void*)thread_2_stack_top, &regs); // 栈顶指针和寄存器
 	// Step 8.将刚刚创建的寄存器信息写入线程
     error = seL4_TCB_WriteRegisters(child_tcb, 0, 0, num_regs, &regs);
 
