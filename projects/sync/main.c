@@ -56,7 +56,7 @@ seL4_CPtr mount_frame(seL4_BootInfo * info, seL4_Word vaddr)
     seL4_CPtr pt = alloc_object(info, seL4_X86_PageTableObject, 0);
     // 2. 将页表对象映射到 VSpace 中
     error = seL4_X86_PageTable_Map(pt, seL4_CapInitThreadVSpace, vaddr, seL4_X86_Default_VMAttributes);
-    ZF_LOGF_IF(error, "Failed to map page table");
+    ZF_LOGF_IF(error, "Failed to map `%p` page table", vaddr);
 
     // 3. 将物理帧映射到 VSpace
     seL4_CPtr ipc_frame_cap = alloc_object(info, seL4_X86_4K, 0);

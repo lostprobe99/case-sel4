@@ -44,25 +44,30 @@ void thread_2(void * arg0, void * arg1, void * arg2)
     seL4_Word sender_badge;
     seL4_Word msg;
     seL4_CPtr ep_object = (seL4_CPtr)arg0;
+    // 将 IPCBUF_VADDR 强转到 seL4_IPCBuffer * 并访问其 msg 成员
+    seL4_IPCBuffer* ipcbuf = (seL4_IPCBuffer*)IPCBUF_VADDR;
 
     // 1. ep 和 badge 测试
     tag = seL4_Recv(ep_object, &sender_badge);
+    // printf(EVAL(sender_badge, "%d"));
     check_badge(sender_badge);
 
     tag = seL4_Recv(ep_object, &sender_badge);
+    // printf(EVAL(sender_badge, "%d"));
     check_badge(sender_badge);
 
     tag = seL4_Recv(ep_object, &sender_badge);
+    // printf(EVAL(sender_badge, "%d"));
     check_badge(sender_badge);
 
     // 2. seL4_Call + seL4_ReplyRecv
     tag = seL4_Recv(ep_object, &sender_badge);
-    printf("thread_2[%d]: sender_badge = %lu\n", __LINE__, sender_badge);
+    // printf("thread_2: sender_badge = %lu\n", sender_badge);
     ZF_LOGF_IF(sender_badge != BADGE, "BADGE is not expected");
     ZF_LOGF_IF(seL4_MessageInfo_get_length(tag) != 1, "length is not expected");
 
     msg = seL4_GetMR(0);
-    printf("thread_2[%d]: got a message %#lx\n", __LINE__, msg);
+    printf("thread_2: got a message %#lx\n", msg);
     ZF_LOGF_IF(msg != MSG_DATA, "msg is not expected");
 
     // 响应 seL4_Call
@@ -70,22 +75,22 @@ void thread_2(void * arg0, void * arg1, void * arg2)
     seL4_SetMR(0, msg);
     tag = seL4_ReplyRecv(ep_object, tag, &sender_badge);
     // seL4_Reply(tag);
-    printf("thread_2[%d]: sender_badge = %lu\n", __LINE__, sender_badge);
+    // printf("thread_2: sender_badge = %lu\n", sender_badge);
     ZF_LOGF_IF(sender_badge != BADGE, "BADGE is not expected");
     ZF_LOGF_IF(seL4_MessageInfo_get_length(tag) != 1, "length is not expected");
 
     msg = seL4_GetMR(0);
-    printf("thread_2[%d]: got a message %#lx\n", __LINE__, msg);
+    printf("thread_2: got a message %#lx\n", msg);
     ZF_LOGF_IF(msg != MSG_DATA + 1, "msg is not expected");
 
     // 3. seL4_Call + seL4_Reply
     tag = seL4_Recv(ep_object, &sender_badge);
-    printf("thread_2[%d]: sender_badge = %lu\n", __LINE__, sender_badge);
+    // printf("thread_2[%d]: sender_badge = %lu\n", __LINE__, sender_badge);
     ZF_LOGF_IF(sender_badge != BADGE, "BADGE is not expected");
     ZF_LOGF_IF(seL4_MessageInfo_get_length(tag) != 1, "length is not expected");
 
     msg = seL4_GetMR(0);
-    printf("thread_2[%d]: got a message %#lx\n", __LINE__, msg);
+    printf("thread_2: got a message %#lx\n", msg);
     ZF_LOGF_IF(msg != ~MSG_DATA, "msg is not expected");
 
     msg = ~msg;
@@ -97,25 +102,20 @@ void thread_2(void * arg0, void * arg1, void * arg2)
     ZF_LOGF_IF(msg != MSG_DATA, "msg is not expected");
 
     // 4. 长消息测试 1
-    int len;
+    char buf[seL4_MsgMaxLength] = {0};
     tag = seL4_Recv(ep_object, &sender_badge);
-    len = seL4_MessageInfo_get_length(tag);
-    // 将 IPCBUF_VADDR 强转到 seL4_IPCBuffer * 并访问其 msg 成员
-    seL4_IPCBuffer* ipcbuf = (seL4_IPCBuffer*)IPCBUF_VADDR;
-    printf("thread_2: ipcbuf = %p, seL4_GetIPCBuffer() = %p\n", ipcbuf, seL4_GetIPCBuffer());
-    for(int i = 0; i < 5; i++)
-        printf("thread_2: ipcbuf->msg[%d] = %#lx\n",i, ipcbuf->msg[i]);
-    printf("thread_2: len = %d\n", len);
-    printf("thread_2: Got: \n");
+    int len = seL4_MessageInfo_get_length(tag);
+    printf("thread_2: got msg len = %d\n", len);
     for(int i = 0; i < len; i++)
-        printf("%#lx:[%c] ", seL4_GetMR(i), seL4_GetMR(i));
-    printf("\n");
-    seL4_SetMR(0, 'G');
+        buf[i] = seL4_GetMR(i);
+    printf("thread_2: got: `%s`\n", buf);
+    seL4_SetMR(0, 'W');
     seL4_SetMR(1, 'o');
-    seL4_SetMR(2, 't');
-    tag = seL4_MessageInfo_new(0, 0, 0, 3);
+    seL4_SetMR(2, 'r');
+    seL4_SetMR(3, 'l');
+    seL4_SetMR(4, 'd');
+    tag = seL4_MessageInfo_new(0, 0, 0, 5);
     seL4_Send(ep_object, tag);
-    printf("thread_2: reply `Got`\n");
 }
 
 int main(int argc, char ** argv)
@@ -184,6 +184,12 @@ int main(int argc, char ** argv)
     ZF_LOGF_IF(error, "Failed to set TLS base");
     printf(EVAL(tls, "%p"));
     printf(EVAL(__sel4_ipc_buffer, "%p"));
+    uint64_t* it = tls_region;
+    int llen = CONFIG_SEL4RUNTIME_STATIC_TLS / sizeof(uint64_t);
+    printf(EVAL(it, "%p"));
+    for(int i = 0; i < llen; i++)
+        if(it[i] == ipc_buf_vaddr)
+            printf("tls_region[%p]: %#lx\n", it + i, *(it + i));
     #endif
 
     error = seL4_TCB_Resume(tcb);
@@ -211,7 +217,7 @@ int main(int argc, char ** argv)
     ZF_LOGF_IF(seL4_MessageInfo_get_length(tag) != 1, "length is not expected");
     ZF_LOGF_IF(msg != ~MSG_DATA, "msg is not expected");
 
-    printf("thread_main[%d]: got a reply %#lx\n", __LINE__, msg);
+    printf("thread_main: got a reply %#lx\n", msg);
 
     seL4_SetMR(0, MSG_DATA + 1);
     seL4_Send(ep_cap, tag);
@@ -223,7 +229,7 @@ int main(int argc, char ** argv)
     msg = seL4_GetMR(0);
     ZF_LOGF_IF(seL4_MessageInfo_get_length(tag) != 1, "length is not expected");
     ZF_LOGF_IF(msg != MSG_DATA, "msg is not expected");
-    printf("thread_main[%d]: got a reply %#lx\n", __LINE__, msg);
+    printf("thread_main: got a reply %#lx\n", msg);
 
 
     // 4. 长消息（长度大于4）测试 1
@@ -235,17 +241,17 @@ int main(int argc, char ** argv)
     // msg = "Hello"
 
     tag = seL4_MessageInfo_new(0, 0, 0, 5);
-    printf("thread_main: send `Hello`\n");
     seL4_Send(ep_cap, tag);
 
-    int len;
+    char buf[seL4_MsgMaxLength] = {0};
     seL4_Word sender_badge;
-    tag = seL4_Recv(ep_cap, &sender_badge);
-    len = seL4_MessageInfo_get_length(tag);
-    printf("thread_main: len = %d\n", len);
-    printf("thread_main: Got: ");
+    tag = seL4_Recv(ep_cap, NULL);
+    int len = seL4_MessageInfo_get_length(tag);
+    printf("thread_main: got msg len = %d\n", len);
     for(int i = 0; i < len; i++)
-        printf("%#lx:[%c] ", seL4_GetMR(i), seL4_GetMR(i));
+        buf[i] = seL4_GetMR(i);
+    printf("thread_main: got: `%s`\n", buf);
+
 
     printf("\nEnd\n");
     while(1);
