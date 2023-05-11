@@ -19,3 +19,6 @@
 [submodule "projects/projects_libs"]
 	path = projects/projects_libs
 	url = https://github.com/seL4/projects_libs.git
+[submodule "projects/capdl"]
+	path = projects/capdl
+	url = git@github.com:seL4/capdl.git
