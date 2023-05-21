@@ -63,6 +63,7 @@ int main()
         if(i % 5 == 4)
             printf("\n");
     }
+    printf("\n");
     // printf("%8d\t", *(x + i++));
     // printf("%8d\t", *(x + i++));
     len = BIT(seL4_PageBits) / sizeof(char);
@@ -72,10 +73,10 @@ int main()
     while(*s != 0)
         buf[i++] = *s++;
     buf[i++] = 0;
-    printf("%s\n", buf);
+    printf("%p: %s\n", buf, buf);
 
-    seL4_X86_Page_GetAddress_t paddr = seL4_X86_Page_GetAddress(seL4_CapInitThreadVSpace);
-    printf("paddr of init vspace = %#lx\n", paddr.paddr);
+    seL4_X86_Page_GetAddress_t paddr = seL4_X86_Page_GetAddress(frame_1);
+    printf("paddr of frame_1 = %#lx\n", paddr.paddr);
 
     // paddr = seL4_X86_Page_GetAddress(frame_2);
     // printf("paddr of frame_2 = %#lx\n", paddr.paddr);

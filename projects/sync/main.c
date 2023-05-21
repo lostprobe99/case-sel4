@@ -29,7 +29,7 @@ static uint64_t producer_1_stack[THREAD_STACK_SIZE];
 static uint64_t producer_2_stack[THREAD_STACK_SIZE];
 
 seL4_CPtr empty, full, producer;
-int task, c = 0;
+int task, c = 1;
 #define MAX_PRODUCT_NUM 50
 
 void thread(void * arg0, void * arg1, void * arg2)
@@ -37,11 +37,11 @@ void thread(void * arg0, void * arg1, void * arg2)
     seL4_Word tid = (seL4_Word)arg1;
     printf("producer[%#lx]: hello\n", tid);
 
-    for(; c < MAX_PRODUCT_NUM; c++)
+    for(; c <= MAX_PRODUCT_NUM; c++)
     {
         seL4_Wait(empty, NULL);
         seL4_Wait(producer, NULL);
-        task = ++c;
+        task = c;
         seL4_Signal(producer);
         printf("producer[%#lx]: awaken\n", tid);
         seL4_Signal(full);  
@@ -116,9 +116,8 @@ int main(int argc, char ** argv)
 
     while(1)
     {
-        printf(EVAL(task, "%d"));
         seL4_Signal(empty);
-        printf("consumer: Waiting for produce...\n");
+        printf("consumer: Waiting...\n");
         seL4_Wait(full, NULL);
         printf("consumer: Got task = %d\n", task);
     }

@@ -38,6 +38,8 @@ void check_badge(int badge)
 void thread_2(void * arg0, void * arg1, void * arg2)
 {
     printf("thread_2: hello\n");
+    printf(EVAL(__sel4_ipc_buffer, "%p"));
+    printf(EVAL(seL4_GetIPCBuffer(), "%p"));
     printf(EVAL(&__sel4_ipc_buffer, "%p"));
     printf(EVAL(sel4runtime_get_tls_base(), "%p"));
     seL4_MessageInfo_t tag = seL4_MessageInfo_new(0, 0, 0, 0);
@@ -108,13 +110,20 @@ void thread_2(void * arg0, void * arg1, void * arg2)
     printf("thread_2: got msg len = %d\n", len);
     for(int i = 0; i < len; i++)
         buf[i] = seL4_GetMR(i);
+    ZF_LOGF_IF(strcmp(buf, "Hello") != 0, "msg is not expected");
     printf("thread_2: got: `%s`\n", buf);
-    seL4_SetMR(0, 'W');
-    seL4_SetMR(1, 'o');
-    seL4_SetMR(2, 'r');
-    seL4_SetMR(3, 'l');
-    seL4_SetMR(4, 'd');
-    tag = seL4_MessageInfo_new(0, 0, 0, 5);
+    char *s = "World";
+    int i = 0;
+    while(*s)
+    {
+        seL4_SetMR(i++, *s++);
+    }
+    // seL4_SetMR(0, 'W');
+    // seL4_SetMR(1, 'o');
+    // seL4_SetMR(2, 'r');
+    // seL4_SetMR(3, 'l');
+    // seL4_SetMR(4, 'd');
+    tag = seL4_MessageInfo_new(0, 0, 0, i);
     seL4_Send(ep_object, tag);
 }
 
@@ -159,11 +168,13 @@ int main(int argc, char ** argv)
                                seL4_CapInitThreadCNode, 0,
                                seL4_CapInitThreadPD, 0,
                                ipc_buf_vaddr, ipc_frame_cap);
+                            //    ipc_buf_vaddr, 0);
                             //    0, 0);
     ZF_LOGF_IF(error, "Failed to configure");
 
     seL4_DebugNameThread(seL4_CapInitThreadTCB, "thread_main");
     seL4_DebugNameThread(tcb, "thread_2");
+    // seL4_FastMessageRegisters;
 
     seL4_UserContext regs = sel4_make_regs(thread_2, (void*)ep_object, 0, 0, thread_2_stack, THREAD_2_STACK_SIZE);
     seL4_Word num_regs = sizeof(seL4_UserContext) / sizeof(seL4_Word);
@@ -233,14 +244,21 @@ int main(int argc, char ** argv)
 
 
     // 4. 长消息（长度大于4）测试 1
-    seL4_SetMR(0, 0x48);
-    seL4_SetMR(1, 0x65);
-    seL4_SetMR(2, 0x6c);
-    seL4_SetMR(3, 0x6c);
-    seL4_SetMR(4, 0x6f);
+    // seL4_SetMR(0, 0x48);
+    // seL4_SetMR(1, 0x65);
+    // seL4_SetMR(2, 0x6c);
+    // seL4_SetMR(3, 0x6c);
+    // seL4_SetMR(4, 0x6f);
+    char s[] = {0x48, 0x65, 0x6c, 0x6c, 0x6f, 0};
+    int i = 0;
+    while(s[i] != 0)
+    {
+        seL4_SetMR(i, s[i]);
+        i++;
+    }
     // msg = "Hello"
 
-    tag = seL4_MessageInfo_new(0, 0, 0, 5);
+    tag = seL4_MessageInfo_new(0, 0, 0, i);
     seL4_Send(ep_cap, tag);
 
     char buf[seL4_MsgMaxLength] = {0};
@@ -250,6 +268,7 @@ int main(int argc, char ** argv)
     printf("thread_main: got msg len = %d\n", len);
     for(int i = 0; i < len; i++)
         buf[i] = seL4_GetMR(i);
+    ZF_LOGF_IF(strcmp(buf, "World") != 0, "msg is not expected");
     printf("thread_main: got: `%s`\n", buf);
 
 
