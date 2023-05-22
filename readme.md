@@ -56,3 +56,8 @@ ninja
 ./simulate
 ```
 
+## 目录说明
+- projects/thread  线程管理
+- projects/ipc     进程通信
+- projects/sync    线程同步
+- projects/vmm     虚拟内存管理
