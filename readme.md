@@ -1,7 +1,7 @@
 # seL4
 
 ## 依赖
-
+官方页面 [Host Dependencies](https://docs.sel4.systems/projects/buildsystem/host-dependencies.html)
 ```sh
 # base dependencies
 sudo apt-get update
