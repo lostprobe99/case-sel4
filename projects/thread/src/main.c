@@ -10,26 +10,37 @@
 static uint64_t thread_2_stack[THREAD_2_STACK_SIZE];
 int child_thread_state;
 
-void thread_2(uint64_t * stack_top, void *arg1, void * arg2)
+void thread_2(uint64_t * stack_top/* , void *arg1, void * arg2, void * arg3, void * arg4, void * arg5*/)
 {
-    printf("stack_top = %#lx\n", stack_top);
-    printf("arg1 = %#lx\n", (uint64_t*)arg1);
-    printf("arg2 = %#lx\n", (uint64_t*)arg2);
+    // printf("arg0 = %#lx\n", stack_top);
+    // printf("arg1 = %#lx\n", (uint64_t)arg1);
+    // printf("arg2 = %#lx\n", (uint64_t)arg2);
+    // printf("arg3 = %#lx\n", (uint64_t)arg3);
+    // printf("arg4 = %#lx\n", (uint64_t)arg4);
+    // printf("arg5 = %#lx\n", (uint64_t)arg5);
     printf("thread_2 starting.\n");
-    uint64_t n = 0xff;
-    printf("n = %#lx\n", n);
-    uint64_t nums[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-    for(int i = 0; i < 4; i++)
-    {
-        printf("stack[%#lx]: ", stack_top - i * 8);
-        for(int j = 0; j < 8; j++)
-            printf("%-#16x ", *(stack_top - (8 * i + j)));
-        printf("\n");
-    }
-    printf("stack bottom[thread_2_stack] = %#lx\n", thread_2_stack);
+    // uint64_t n = 0xff;
+    // printf("n = %#lx\n", n);
+    // uint64_t nums[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    // printf("nums = %#x\n", nums);
+    // for(uint64_t i = 0; i < 8; i++)
+    // {
+    //     printf("stack[%#lx]: ", stack_top - i * 4);
+    //     for(uint64_t j = 0; j < 4; j++)
+    //         printf("%-#16x ", *(stack_top - (4 * i + j)));
+    //     printf("\n");
+    // }
+    // printf("stack bottom[thread_2_stack] = %#lx\n", thread_2_stack);
     seL4_DebugDumpScheduler();
     printf("\n\n\n");
     child_thread_state = 0;
+    // while(1);
+}
+
+void thread_3()
+{
+    printf("thread_2: hello\n");
+    printf("do something...\n");
 }
 
 int main(int argc, char *argv[]) {
@@ -85,11 +96,16 @@ int main(int argc, char *argv[]) {
     // Step 7.设置新线程的入口点，运行栈，参数
     sel4utils_arch_init_local_context(thread_2,	// 线程入口点
 					(void*)thread_2_stack_top, (void*)2, (void*)3,   //  三个参数
+					// (void*)1, (void*)2, (void*)3,   //  三个参数
 					(void*)thread_2_stack_top, &regs); // 栈顶指针和寄存器
+    regs.rcx = 0x4;
+    regs.r8 = 0x5;
+    regs.r9 = 0x6;
 	// Step 8.将刚刚创建的寄存器信息写入线程
     error = seL4_TCB_WriteRegisters(child_tcb, 0, 0, num_regs, &regs);
 
     printf("main: hello world\n");
+    printf("main: thread_2 = %p\n", thread_2);
 
     seL4_DebugDumpScheduler();
     child_thread_state = 1;
