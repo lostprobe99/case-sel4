@@ -12,7 +12,7 @@ find_package(elfloader-tool REQUIRED)
 find_package(musllibc REQUIRED)
 find_package(util_libs REQUIRED)
 find_package(seL4_libs REQUIRED)
-find_package(projects_libs REQUIRED)
+# find_package(projects_libs REQUIRED)
 
 sel4_import_kernel()
 elfloader_import_project()
@@ -23,7 +23,7 @@ sel4_import_libsel4()
 util_libs_import_libraries()
 sel4_libs_import_libraries()
 # END sel4 dependencies
-projects_libs_import_libraries()
+# projects_libs_import_libraries()
 
 add_subdirectory(../libsel4tutorials libsel4tutorials)
 add_subdirectory(../os_case os_case)
